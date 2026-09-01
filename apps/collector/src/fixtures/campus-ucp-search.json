@@ -1,0 +1,54 @@
+{
+  "jsonrpc": "2.0",
+  "id": "solesignal-catalog-search",
+  "result": {
+    "isError": false,
+    "structuredContent": {
+      "products": [
+        {
+          "id": "gid://shopify/Product/9439744590055",
+          "title": "FYBER Grey Men's Running Shoes",
+          "url": "https://www.campusshoes.com/products/fyber-grey-mens-running-shoes",
+          "handle": "fyber-grey-mens-running-shoes",
+          "price_range": {
+            "min": { "amount": 107900, "currency": "INR" },
+            "max": { "amount": 107900, "currency": "INR" }
+          },
+          "list_price_range": {
+            "min": { "amount": 299900, "currency": "INR" },
+            "max": { "amount": 299900, "currency": "INR" }
+          },
+          "variants": [
+            {
+              "id": "gid://shopify/ProductVariant/1",
+              "sku": "FYBER-6",
+              "title": "Grey / 6",
+              "price": { "amount": 107900, "currency": "INR" },
+              "list_price": { "amount": 299900, "currency": "INR" },
+              "availability": { "available": true },
+              "options": [{ "name": "Size", "label": "6" }],
+              "media": []
+            },
+            {
+              "id": "gid://shopify/ProductVariant/2",
+              "sku": "FYBER-7",
+              "title": "Grey / 7",
+              "price": { "amount": 107900, "currency": "INR" },
+              "availability": { "available": true },
+              "options": [{ "name": "Size", "label": "7" }],
+              "media": []
+            }
+          ],
+          "media": [
+            {
+              "type": "image",
+              "url": "https://cdn.shopify.com/fyber.webp"
+            }
+          ],
+          "tags": ["men running shoes", "topseller"]
+        }
+      ],
+      "pagination": { "has_next_page": false }
+    }
+  }
+}

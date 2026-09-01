@@ -1,0 +1,2 @@
+source,source_product_id,url,title,brand,price,original_price,currency,rating,review_count,rank,category,availability,sizes_available,image_url,observed_at
+partner-feed,sku-101,https://example.com/sku-101,Retro Suede Sneaker,Example,1499,1999,INR,4.4,21,8,casual,in_stock,7|8|9,,2026-08-31T09:00:00+05:30

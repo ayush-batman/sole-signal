@@ -1,0 +1,1 @@
+{"actorSpecification":1,"name":"solesignal-collector","version":"0.1","build":{"dockerfile":"./Dockerfile"},"input":"./input_schema.json"}
