@@ -19,9 +19,10 @@ import {
 
 export default function Products() {
   const { workspaceSlug, loading } = useWorkspace();
+  const [windowDays, setWindowDays] = useState<7 | 30 | 90 | 180>(30);
   const rows = useQuery(
     api.products.list,
-    loading ? "skip" : { workspaceSlug },
+    loading ? "skip" : { workspaceSlug, windowDays },
   );
   const [search, setSearch] = useState("");
   const filtered = useMemo(
@@ -57,6 +58,21 @@ export default function Products() {
           <SlidersHorizontal className="h-4 w-4" />
           Filters
         </button>
+        <label className="flex h-10 items-center gap-2 rounded-lg border px-3 text-xs font-semibold">
+          Trend window
+          <select
+            value={windowDays}
+            onChange={(event) =>
+              setWindowDays(Number(event.target.value) as 7 | 30 | 90 | 180)
+            }
+            className="bg-transparent text-foreground outline-none"
+          >
+            <option value={7}>7 days</option>
+            <option value={30}>30 days</option>
+            <option value={90}>3 months</option>
+            <option value={180}>6 months</option>
+          </select>
+        </label>
       </div>
       <div className="data-card overflow-hidden">
         <div className="overflow-x-auto">
@@ -74,7 +90,7 @@ export default function Products() {
                   "Rating",
                   "Reviews Δ",
                   "Sizes",
-                  "Trend",
+                  `${windowDays}d Trend`,
                   "Confidence",
                   "Observed",
                 ].map((h) => (
@@ -151,9 +167,11 @@ export default function Products() {
                       {row.latest?.sizesAvailable.length ?? 0}
                     </td>
                     <td className="px-3">
-                      <StageBadge stage={row.score?.stage} />
+                      <StageBadge stage={row.windowTrend?.stage} />
                     </td>
-                    <td className="px-3">{row.score?.confidence ?? "—"}%</td>
+                    <td className="px-3">
+                      {row.windowTrend?.confidence ?? "—"}%
+                    </td>
                     <td className="px-3 text-muted-foreground">
                       {row.latest
                         ? new Date(row.latest.observedAt).toLocaleDateString(
@@ -169,7 +187,9 @@ export default function Products() {
         </div>
         <div className="flex items-center justify-between border-t px-4 py-3 text-xs text-muted-foreground">
           <span>{filtered.length} listings</span>
-          <span>All values are observations, not sales</span>
+          <span>
+            {windowDays}-day scores use observed movement, never synthetic sales
+          </span>
         </div>
       </div>
     </>

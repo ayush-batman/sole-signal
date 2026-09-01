@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { requireWorkspace } from "./lib/access";
 import { inferAttributes, normaliseTitle } from "../packages/domain/src";
 import type { Id } from "./_generated/dataModel";
@@ -23,19 +24,22 @@ const row = v.object({
   observed_at: v.string(),
 });
 
-export const importRows = mutation({
+export const importRowsInternal = internalMutation({
   args: {
     workspaceId: v.id("workspaces"),
     fileName: v.string(),
     rows: v.array(row),
+    userId: v.optional(v.id("users")),
   },
   returns: v.object({
     inserted: v.number(),
     duplicates: v.number(),
     importRunId: v.id("importRuns"),
   }),
-  handler: async (ctx, { workspaceId, fileName, rows }) => {
-    const { userId } = await requireWorkspace(ctx, workspaceId);
+  handler: async (ctx, { workspaceId, fileName, rows, userId }) => {
+    if (!(await ctx.db.get("workspaces", workspaceId))) {
+      throw new Error("Workspace not found.");
+    }
     if (rows.length > 1000)
       throw new Error("Import at most 1,000 rows per batch.");
     const importRunId = await ctx.db.insert("importRuns", {
@@ -244,6 +248,38 @@ export const importRows = mutation({
         latestError: undefined,
       });
     return { inserted, duplicates, importRunId };
+  },
+});
+
+export const importRows = mutation({
+  args: {
+    workspaceId: v.id("workspaces"),
+    fileName: v.string(),
+    rows: v.array(row),
+  },
+  returns: v.object({
+    inserted: v.number(),
+    duplicates: v.number(),
+    importRunId: v.id("importRuns"),
+  }),
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
+    inserted: number;
+    duplicates: number;
+    importRunId: Id<"importRuns">;
+  }> => {
+    const { userId } = await requireWorkspace(ctx, args.workspaceId);
+    const result: {
+      inserted: number;
+      duplicates: number;
+      importRunId: Id<"importRuns">;
+    } = await ctx.runMutation(internal.ingestion.importRowsInternal, {
+      ...args,
+      userId,
+    });
+    return result;
   },
 });
 

@@ -37,6 +37,15 @@ export default function Dashboard() {
   const [price, setPrice] = useState("all");
   const [platform, setPlatform] = useState("all");
   const [days, setDays] = useState("30");
+  const productRows = useQuery(
+    api.products.list,
+    loading
+      ? "skip"
+      : {
+          workspaceSlug,
+          windowDays: Number(days) as 7 | 30 | 90 | 180,
+        },
+  );
   const filtered = useMemo(
     () =>
       data?.trends.filter(
@@ -58,6 +67,19 @@ export default function Dashboard() {
     (a: any, b: any) => (b.trend?.score ?? 0) - (a.trend?.score ?? 0),
   )[0];
   const leadTrend = lead?.trend;
+  const rankedLiveProducts = [...(productRows ?? [])]
+    .filter((row: any) => row.windowTrend?.score != null)
+    .sort(
+      (a: any, b: any) =>
+        (b.windowTrend?.score ?? 0) - (a.windowTrend?.score ?? 0),
+    );
+  const leadLiveProduct = rankedLiveProducts[0];
+  const observedLiveDays = Math.max(
+    0,
+    ...(productRows ?? []).map(
+      (row: any) => row.windowTrend?.evidenceDays ?? 0,
+    ),
+  );
   const visibleOpportunities = [...filtered]
     .filter((item: any) => (item.opportunity?.score ?? 0) >= 70)
     .sort(
@@ -128,9 +150,43 @@ export default function Dashboard() {
           <option value="7">Last 7 days</option>
           <option value="30">Last 30 days</option>
           <option value="90">Last 90 days</option>
+          <option value="180">Last 6 months</option>
         </DashboardFilter>
       </div>
       <section className="grid gap-4 xl:grid-cols-[1.4fr_.6fr]">
+        {!usingDemo && (
+          <div className="data-card overflow-hidden p-5">
+            <p className="text-xs font-bold uppercase tracking-[.13em] text-[#2f726b] dark:text-[#84d4c7]">
+              Verified {days}-day signal
+            </p>
+            <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight">
+              {leadLiveProduct
+                ? leadLiveProduct.listing.title
+                : "Building the real observation history"}
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+              {leadLiveProduct
+                ? leadLiveProduct.windowTrend!.explanation
+                : `${productRows?.length ?? 0} live listings are tracked. ${observedLiveDays} real days are currently available; no trend is claimed before the selected window has enough evidence.`}
+            </p>
+            <div className="mt-6 grid grid-cols-3 gap-3">
+              <Score
+                value={leadLiveProduct?.windowTrend?.score ?? null}
+                label="Trend"
+              />
+              <Score
+                value={leadLiveProduct?.windowTrend?.confidence ?? 0}
+                label="Confidence"
+              />
+              <Score value={observedLiveDays} label="Days observed" />
+            </div>
+            <Link href="/products" className="mt-5 inline-flex">
+              <Button variant="outline" size="sm">
+                Inspect every product <ArrowRight />
+              </Button>
+            </Link>
+          </div>
+        )}
         {lead && leadTrend && (
           <div className="data-card overflow-hidden p-4 sm:p-5">
             <div className="mb-4 flex items-start justify-between gap-3">

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   computeScores,
+  computeWindowTrend,
   exactMatch,
   inferAttributes,
   normaliseTitle,
@@ -107,6 +108,59 @@ describe("scoring", () => {
         supply,
       ).stage,
     ).toBe("declining"));
+});
+
+describe("real observation windows", () => {
+  const observation = (
+    day: number,
+    overrides: Partial<{
+      price: number;
+      originalPrice: number;
+      rank: number;
+      reviewCount: number;
+      sizesAvailable: string[];
+      availability: string;
+    }> = {},
+  ) => ({
+    observedAt: Date.UTC(2026, 7, day),
+    price: 1499,
+    originalPrice: 1499,
+    rank: 60,
+    reviewCount: 10,
+    sizesAvailable: ["7", "8", "9", "10"],
+    availability: "in_stock",
+    ...overrides,
+  });
+
+  it("does not claim a 30-day trend from one week of data", () => {
+    const result = computeWindowTrend(observation(1), observation(8), 30);
+    expect(result.score).toBeNull();
+    expect(result.stage).toBe("insufficient_history");
+  });
+
+  it("detects organic movement after the window is covered", () => {
+    const result = computeWindowTrend(
+      observation(1),
+      observation(31, { rank: 15, reviewCount: 55 }),
+      30,
+    );
+    expect(result.score).toBeGreaterThan(65);
+    expect(result.stage).toBe("rising");
+  });
+
+  it("penalises a trend created by deeper discounting", () => {
+    const result = computeWindowTrend(
+      observation(1, { originalPrice: 1999, price: 1899 }),
+      observation(31, {
+        originalPrice: 1999,
+        price: 999,
+        rank: 15,
+        reviewCount: 45,
+      }),
+      30,
+    );
+    expect(result.stage).toBe("discount_led");
+  });
 });
 
 describe("ingestion and taxonomy", () => {

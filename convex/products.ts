@@ -1,11 +1,22 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { workspaceBySlug } from "./lib/access";
+import { computeWindowTrend } from "../packages/domain/src";
+
+const windowDaysValidator = v.union(
+  v.literal(7),
+  v.literal(30),
+  v.literal(90),
+  v.literal(180),
+);
 
 export const list = query({
-  args: { workspaceSlug: v.string() },
+  args: {
+    workspaceSlug: v.string(),
+    windowDays: v.optional(windowDaysValidator),
+  },
   returns: v.any(),
-  handler: async (ctx, { workspaceSlug }) => {
+  handler: async (ctx, { workspaceSlug, windowDays = 30 }) => {
     const workspace = await workspaceBySlug(ctx, workspaceSlug);
     const listings = await ctx.db
       .query("productListings")
@@ -27,7 +38,30 @@ export const list = query({
           .order("desc")
           .take(2);
         const latest = snapshots[0] ?? null;
-        const previous = snapshots[1] ?? null;
+        const cutoff = latest
+          ? latest.observedAt - windowDays * 86_400_000
+          : 0;
+        const windowAnchor = latest
+          ? (
+              await ctx.db
+                .query("listingSnapshots")
+                .withIndex("by_listing_and_observed_at", (q) =>
+                  q.eq("listingId", listing._id).lte("observedAt", cutoff),
+                )
+                .order("desc")
+                .take(1)
+            )[0] ??
+            (
+              await ctx.db
+                .query("listingSnapshots")
+                .withIndex("by_listing_and_observed_at", (q) =>
+                  q.eq("listingId", listing._id),
+                )
+                .order("asc")
+                .take(1)
+            )[0]
+          : null;
+        const previous = windowAnchor ?? snapshots[1] ?? null;
         const membership = (
           await ctx.db
             .query("styleClusterMembers")
@@ -54,6 +88,10 @@ export const list = query({
           latest,
           previous,
           score,
+          windowTrend:
+            latest && windowAnchor
+              ? computeWindowTrend(windowAnchor, latest, windowDays)
+              : null,
           rankChange:
             latest?.rank != null && previous?.rank != null
               ? previous.rank - latest.rank

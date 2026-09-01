@@ -38,7 +38,9 @@ export default defineSchema({
     timezone: v.string(),
     demo: v.boolean(),
     createdAt: v.number(),
-  }).index("by_slug", ["slug"]),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_demo", ["demo"]),
   workspaceMembers: defineTable({
     workspaceId: v.id("workspaces"),
     userId: v.id("users"),
