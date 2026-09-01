@@ -1,0 +1,9 @@
+.quickstart-logs
+.quickstart-runbook.md
+.agents
+.cursor
+apps/collector/storage
+apps/collector/node_modules
+e2e
+test-results
+playwright-report
