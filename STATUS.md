@@ -28,6 +28,8 @@ Last updated: 2026-09-01
 - Added evidence-based 7-day, 30-day, 90-day, and 180-day product trend windows. Scores remain blank until at least 70% of a window contains real observed history.
 - Ran the scheduled pipeline against development and production: 10 source-workspace runs per environment, zero source failures, and 1,000 fresh observations per environment.
 - Published the public GitHub repository and production Vercel/Convex deployments.
+- Added the production callback to the GitHub OAuth app and completed the live authorization flow as `ayush-batman`.
+- Browser-verified the production dashboard and product catalog: 621 live snapshots, 472 observed listings, six sources, and working 7-day, 30-day, 90-day, and 180-day views with no console errors.
 
 ## Blocked on user input
 
@@ -35,7 +37,6 @@ Last updated: 2026-09-01
 - Flipkart needs an approved affiliate ID and token.
 - Amazon India needs approved Creators API OAuth credentials and a partner tag.
 - Myntra, AJIO, Tata CLiQ, and Meesho need partner-feed access because no approved public product API is available.
-- Production GitHub login needs the prepared production callback URI saved in the existing GitHub OAuth App.
 
 ## Decisions made
 
@@ -53,6 +54,7 @@ Last updated: 2026-09-01
 - Unit/integration: 21 tests cover scoring scenarios, four-window history gates, low-inventory and discount false positives, taxonomy, normalization, matching, CSV, live-source fixtures, ingestion idempotency, and cross-workspace rejection.
 - Browser: 7 Playwright checks pass across desktop and phone; one desktop-only duplicate of the phone navigation test is intentionally skipped.
 - Real authentication: GitHub authorization returns to `http://localhost:3000`, the session survives a production rebuild/restart, and authenticated UI shows `Sign out`.
+- Production authentication: GitHub authorization returns to `https://sole-signal-nu.vercel.app/dashboard`; the private dashboard and catalog load for `ayush-batman`.
 - Private workspace: signed-in onboarding created `SoleSignal Workspace` with the configured India footwear decision profile.
 - Private import: the fixture produced `1 inserted · 0 duplicates safely skipped`; repeating the exact import produced `0 inserted · 1 duplicates safely skipped`.
 - Accessibility: dashboard, CSV catalog, and trend evidence pages have zero WCAG A/AA axe violations.
@@ -61,6 +63,7 @@ Last updated: 2026-09-01
 - Live sources: Campus collector smoke test passes; Campus, CAI, Neeman's, RedTape, and INC.5 all sync into Convex through explicit read-only public catalog access.
 - Live browser data: 121 listings, five public store feeds plus one private CSV source, and 120 real product images render in the signed-in workspace.
 - Scheduled production collection: 1,000 observations inserted across two non-demo workspaces from ten successful source-workspace runs; zero failures.
+- Live production browser: all four trend-window controls render the correct selected range and no browser console errors were reported.
 
 ## Commands run
 
