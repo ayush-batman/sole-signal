@@ -24,6 +24,10 @@ Last updated: 2026-09-01
 - Synced and browser-verified 121 listings: 24 each from five live stores plus the existing private CSV observation, with 120 real catalog images.
 - Added same-day duplicate protection to every live sync and verified repeated Campus and CAI syncs return `0 added · 24 already current`.
 - Replaced placeholder artwork with actual catalog images when a source supplies one; missing trend stages now read `insufficient history` instead of `stable`.
+- Deployed a daily 06:00 IST production collector for all five approved catalogs, using internal-only ingestion and per-day duplicate protection.
+- Added evidence-based 7-day, 30-day, 90-day, and 180-day product trend windows. Scores remain blank until at least 70% of a window contains real observed history.
+- Ran the scheduled pipeline against development and production: 10 source-workspace runs per environment, zero source failures, and 1,000 fresh observations per environment.
+- Published the public GitHub repository and production Vercel/Convex deployments.
 
 ## Blocked on user input
 
@@ -31,6 +35,7 @@ Last updated: 2026-09-01
 - Flipkart needs an approved affiliate ID and token.
 - Amazon India needs approved Creators API OAuth credentials and a partner tag.
 - Myntra, AJIO, Tata CLiQ, and Meesho need partner-feed access because no approved public product API is available.
+- Production GitHub login needs the prepared production callback URI saved in the existing GitHub OAuth App.
 
 ## Decisions made
 
@@ -45,7 +50,7 @@ Last updated: 2026-09-01
 
 - TypeScript: root and collector type checks pass.
 - Lint: no errors or warnings.
-- Unit/integration: 18 tests cover scoring scenarios, low-inventory and discount false positives, taxonomy, normalization, matching, CSV, live-source fixtures, ingestion idempotency, and cross-workspace rejection.
+- Unit/integration: 21 tests cover scoring scenarios, four-window history gates, low-inventory and discount false positives, taxonomy, normalization, matching, CSV, live-source fixtures, ingestion idempotency, and cross-workspace rejection.
 - Browser: 7 Playwright checks pass across desktop and phone; one desktop-only duplicate of the phone navigation test is intentionally skipped.
 - Real authentication: GitHub authorization returns to `http://localhost:3000`, the session survives a production rebuild/restart, and authenticated UI shows `Sign out`.
 - Private workspace: signed-in onboarding created `SoleSignal Workspace` with the configured India footwear decision profile.
@@ -55,6 +60,7 @@ Last updated: 2026-09-01
 - Production build: all 15 routes compile successfully.
 - Live sources: Campus collector smoke test passes; Campus, CAI, Neeman's, RedTape, and INC.5 all sync into Convex through explicit read-only public catalog access.
 - Live browser data: 121 listings, five public store feeds plus one private CSV source, and 120 real product images render in the signed-in workspace.
+- Scheduled production collection: 1,000 observations inserted across two non-demo workspaces from ten successful source-workspace runs; zero failures.
 
 ## Commands run
 
@@ -68,5 +74,5 @@ Last updated: 2026-09-01
 
 ## Optional future work
 
-- Configure Flipkart, a model provider, WhatsApp, production hosting, and a custom domain if those integrations become useful.
+- Configure approved marketplace feeds, a model provider, WhatsApp, and a custom domain if those integrations become useful.
 - The collector Dockerfile is structurally checked but was not built locally because this machine has no running Docker daemon.

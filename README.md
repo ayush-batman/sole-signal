@@ -14,6 +14,8 @@ The application is MIT-licensed and uses open-source code throughout: Next.js, R
 - Dashboard, trend explorer, products, opportunities, competitors, research, catalog, alerts, sources, settings, and weekly report screens
 - Five permissioned live India catalogs: Campus Shoes, The CAI Store, Neeman's, RedTape, and INC.5
 - Real prices, list prices, images, stock, and sizes synced into the signed-in Convex workspace
+- Daily 06:00 IST collection through a Convex cron, with same-day duplicate protection
+- Honest 7, 30, 90, and 180-day product windows that remain blank until enough real history exists
 - A disabled Flipkart adapter and configurable retailer adapter for approved feeds
 - Printable weekly report and CSV export
 - Disabled-by-default model and WhatsApp provider interfaces
@@ -71,6 +73,11 @@ The Catalog screen syncs all five approved live sources into a private
 workspace. Repeating a source sync on the same UTC day is idempotent: current
 rows are reported as duplicates instead of inflating the observation count.
 
+Production also runs `dailyPipeline:syncDaily` every day at 00:30 UTC (06:00
+IST). A trend window needs at least 70% of its requested calendar history before
+it publishes a score. Until then the UI reports the exact observed-day count
+instead of extrapolating or filling gaps with synthetic data.
+
 The Flipkart adapter reports `Not connected` until its ID, token, and confirmed endpoint are supplied. Build the standalone Apify Actor from its directory:
 
 ```bash
@@ -102,7 +109,7 @@ PLAYWRIGHT_BASE_URL=http://localhost:3000 pnpm test:e2e
 2. Set production `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET`, and `SITE_URL` on that deployment.
 3. Add the production Convex callback URL to the GitHub OAuth App.
 4. Deploy the Next.js project to Vercel with the production `NEXT_PUBLIC_CONVEX_URL` and `NEXT_PUBLIC_CONVEX_SITE_URL`.
-5. Deploy the collector as an Apify Actor; do not run continuous collection in Vercel functions.
+5. Convex deploys the daily collector schedule from `convex/crons.ts`; Apify remains available for approved sources that require browser collection.
 6. Keep every planned connector disabled until permission, fixtures, and a live smoke test pass.
 
 See `RUNBOOK.md` for operations, `DATA_SOURCE_MATRIX.md` for connector truth, and `COMPLIANCE_AND_SOURCE_POLICY.md` for collection rules.
