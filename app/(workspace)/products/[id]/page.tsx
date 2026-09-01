@@ -31,6 +31,7 @@ export default function ProductDetail() {
     .flatMap((l: any) => l.snapshots)
     .sort((a: any, b: any) => a.observedAt - b.observedAt);
   const latest = allSnapshots.at(-1);
+  const verifiedPosition = latest?.rankKind ? `#${latest.rank ?? "—"}` : "—";
   const primaryImage = data.listings.find((item: any) => item.listing.imageUrl)
     ?.listing.imageUrl;
   return (
@@ -66,7 +67,16 @@ export default function ProductDetail() {
           <div className="mt-5 grid grid-cols-2 gap-3">
             {[
               ["Current price", `₹${latest?.price.toLocaleString("en-IN")}`],
-              ["Current rank", `#${latest?.rank ?? "—"}`],
+              [
+                latest?.rankKind === "bestseller"
+                  ? "Bestseller rank"
+                  : latest?.rankKind === "marketplace_popularity"
+                    ? "Popularity position"
+                    : latest?.rankKind === "search_position"
+                      ? "Search position"
+                      : "Verified position",
+                verifiedPosition,
+              ],
               ["Rating", latest?.rating?.toFixed(1) ?? "—"],
               ["Sizes live", String(latest?.sizesAvailable.length ?? 0)],
             ].map(([label, value]) => (
@@ -86,11 +96,23 @@ export default function ProductDetail() {
           </div>
         </div>
         <div className="space-y-4">
-          <Timeline
-            title="Rank timeline"
-            values={allSnapshots.map((s: any) => 101 - (s.rank ?? 100))}
-            labels="Higher line means stronger normalized rank"
-          />
+          {allSnapshots.some((snapshot: any) => snapshot.rankKind) ? (
+            <Timeline
+              title="Observed position timeline"
+              values={allSnapshots.map((s: any) =>
+                s.rankKind ? 101 - (s.rank ?? 100) : 0,
+              )}
+              labels={`${latest?.rankContext ?? "Higher line means stronger observed position"}. This is not unit sales.`}
+            />
+          ) : (
+            <div className="data-card p-4">
+              <h2 className="text-sm font-semibold">Sales-rank evidence</h2>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                This source provides catalog facts only. No marketplace rank or
+                best-seller claim is available.
+              </p>
+            </div>
+          )}
           <Timeline
             title="Review timeline"
             values={allSnapshots.map((s: any) => s.reviewCount ?? 0)}

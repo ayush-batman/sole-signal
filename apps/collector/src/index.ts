@@ -2,11 +2,15 @@ import { Actor } from "apify";
 import { CaiStoreAdapter } from "./adapters/caiStore";
 import { CampusUcpAdapter } from "./adapters/campusUcp";
 import { FlipkartAffiliateAdapter } from "./adapters/flipkart";
+import { AnysiteMarketplaceAdapter } from "./adapters/anysiteMarketplace";
 
 const adapters = {
   "cai-store-public": new CaiStoreAdapter(),
   "campus-ucp": new CampusUcpAdapter(),
   "flipkart-affiliate": new FlipkartAffiliateAdapter(),
+  "amazon-india-anysite": new AnysiteMarketplaceAdapter("amazon-india"),
+  "flipkart-anysite": new AnysiteMarketplaceAdapter("flipkart"),
+  "myntra-anysite": new AnysiteMarketplaceAdapter("myntra"),
 };
 
 await Actor.init();

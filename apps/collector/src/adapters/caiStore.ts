@@ -73,7 +73,7 @@ export class CaiStoreAdapter implements SourceAdapter {
       throw new Error(`CAI catalog returned HTTP ${response.status}`);
     const body = (await response.json()) as { products: ShopifyProduct[] };
     const observedAt = new Date().toISOString();
-    return body.products.slice(0, limit).map((product, rank) => {
+    return body.products.slice(0, limit).map((product) => {
       const available = product.variants.filter((v) => v.available);
       const variant = available[0] ?? product.variants[0];
       return {
@@ -89,7 +89,7 @@ export class CaiStoreAdapter implements SourceAdapter {
         currency: "INR",
         rating: null,
         review_count: null,
-        rank: rank + 1,
+        rank: null,
         category: product.product_type || "footwear",
         availability: available.length ? "in_stock" : "out_of_stock",
         sizes_available: available.map((v) => v.title),

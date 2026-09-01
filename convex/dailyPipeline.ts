@@ -7,6 +7,12 @@ import {
   collectCatalog,
   type CatalogStoreKey,
 } from "./lib/catalogCollectors";
+import {
+  collectMarketplace,
+  marketplaceCollectionEnabled,
+  marketplaceStores,
+  type MarketplaceStoreKey,
+} from "./lib/marketplaceCollectors";
 
 export const targetWorkspaces = internalQuery({
   args: {},
@@ -39,10 +45,16 @@ export const syncDaily = internalAction({
     let inserted = 0;
     let duplicates = 0;
     const stores = Object.keys(catalogStores) as CatalogStoreKey[];
+    const marketplaceKeys = marketplaceCollectionEnabled()
+      ? (Object.keys(marketplaceStores) as MarketplaceStoreKey[])
+      : [];
     for (const workspaceId of workspaceIds) {
-      for (const store of stores) {
+      for (const store of [...stores, ...marketplaceKeys]) {
         try {
-          const rows = await collectCatalog(store, 100);
+          const rows =
+            store in catalogStores
+              ? await collectCatalog(store as CatalogStoreKey, 100)
+              : await collectMarketplace(store as MarketplaceStoreKey, 100);
           const source = rows[0]?.source ?? store;
           const day = rows[0]?.observed_at.slice(0, 10) ?? new Date().toISOString().slice(0, 10);
           const result: { inserted: number; duplicates: number } = await ctx.runMutation(

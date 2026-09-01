@@ -12,6 +12,12 @@ export type CatalogRow = {
   rating: number | null;
   review_count: number | null;
   rank: number | null;
+  rank_type?:
+    | "bestseller"
+    | "marketplace_popularity"
+    | "search_position"
+    | "catalog_position";
+  rank_context?: string;
   category: string;
   availability: string;
   sizes_available: string[];

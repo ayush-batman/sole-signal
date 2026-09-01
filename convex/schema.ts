@@ -26,6 +26,12 @@ const scoreStage = v.union(
   v.literal("stable"),
 );
 const raw = v.any();
+const rankKind = v.union(
+  v.literal("bestseller"),
+  v.literal("marketplace_popularity"),
+  v.literal("search_position"),
+  v.literal("catalog_position"),
+);
 
 export default defineSchema({
   ...authTables,
@@ -208,6 +214,8 @@ export default defineSchema({
     rating: v.optional(v.number()),
     reviewCount: v.optional(v.number()),
     rank: v.optional(v.number()),
+    rankKind: v.optional(rankKind),
+    rankContext: v.optional(v.string()),
     rankPercentile: v.optional(v.number()),
     surfaceSize: v.optional(v.number()),
     availability: v.string(),

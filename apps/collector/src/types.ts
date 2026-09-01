@@ -52,6 +52,12 @@ export type CollectorObservation = {
   rating: number | null;
   review_count: number | null;
   rank: number | null;
+  rank_type?:
+    | "bestseller"
+    | "marketplace_popularity"
+    | "search_position"
+    | "catalog_position";
+  rank_context?: string;
   category: string;
   availability: "in_stock" | "out_of_stock" | "preorder" | "unknown";
   sizes_available: string[];

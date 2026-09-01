@@ -22,7 +22,7 @@ describe("CAI public catalog adapter", () => {
         source_product_id: "1001",
         price: 1499,
         original_price: 1999,
-        rank: 1,
+        rank: null,
         availability: "in_stock",
         sizes_available: ["36"],
       },

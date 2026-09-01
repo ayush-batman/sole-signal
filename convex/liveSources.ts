@@ -8,6 +8,10 @@ import {
   collectCatalog,
   type CatalogStoreKey,
 } from "./lib/catalogCollectors";
+import {
+  collectMarketplace,
+  type MarketplaceStoreKey,
+} from "./lib/marketplaceCollectors";
 
 const syncResult = v.object({
   inserted: v.number(),
@@ -65,4 +69,41 @@ export const syncCaiStore = action({
   returns: syncResult,
   handler: async (ctx, { workspaceId, limit }) =>
     syncStore(ctx, workspaceId, "cai", limit),
+});
+
+export const syncMarketplace = action({
+  args: {
+    workspaceId: v.id("workspaces"),
+    store: v.union(
+      v.literal("amazonIndia"),
+      v.literal("flipkart"),
+      v.literal("myntra"),
+    ),
+    limit: v.optional(v.number()),
+  },
+  returns: syncResult,
+  handler: async (
+    ctx,
+    { workspaceId, store, limit },
+  ): Promise<{
+    inserted: number;
+    duplicates: number;
+    importRunId: Id<"importRuns">;
+  }> => {
+    if (!(await getAuthUserId(ctx))) {
+      throw new Error("Sign in with GitHub to sync marketplace data.");
+    }
+    const rows = await collectMarketplace(
+      store as MarketplaceStoreKey,
+      limit ?? 100,
+    );
+    const source = rows[0]?.source ?? store;
+    const day =
+      rows[0]?.observed_at.slice(0, 10) ?? new Date().toISOString().slice(0, 10);
+    return ctx.runMutation(api.ingestion.importRows, {
+      workspaceId,
+      fileName: `${source}-${day}.json`,
+      rows,
+    });
+  },
 });

@@ -117,6 +117,11 @@ describe("real observation windows", () => {
       price: number;
       originalPrice: number;
       rank: number;
+      rankKind:
+        | "bestseller"
+        | "marketplace_popularity"
+        | "search_position"
+        | "catalog_position";
       reviewCount: number;
       sizesAvailable: string[];
       availability: string;
@@ -160,6 +165,30 @@ describe("real observation windows", () => {
       30,
     );
     expect(result.stage).toBe("discount_led");
+  });
+
+  it("does not treat catalog order as a demand rank", () => {
+    const result = computeWindowTrend(
+      observation(1, { rank: 50, rankKind: "catalog_position" }),
+      observation(31, { rank: 1, rankKind: "catalog_position" }),
+      30,
+    );
+    expect(result.components.rankMomentum).toBeNull();
+    expect(result.evidenceLevel).toBe("estimated");
+  });
+
+  it("labels marketplace popularity as estimated rather than confirmed sales", () => {
+    const result = computeWindowTrend(
+      observation(1, { rank: 50, rankKind: "marketplace_popularity" }),
+      observation(31, {
+        rank: 10,
+        rankKind: "marketplace_popularity",
+        reviewCount: 40,
+      }),
+      30,
+    );
+    expect(result.evidenceLevel).toBe("estimated");
+    expect(result.evidenceSummary).toContain("not confirmed sales");
   });
 });
 

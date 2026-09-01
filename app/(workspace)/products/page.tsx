@@ -98,13 +98,14 @@ export default function Products() {
                   "Category",
                   "Price",
                   "Discount",
-                  "Rank",
+                  "Position",
                   "Rank Δ",
                   "Rating",
                   "Reviews Δ",
                   "Sizes",
                   `${windowDays}d Trend`,
                   "Confidence",
+                  "Evidence",
                   "Observed",
                 ].map((h) => (
                   <th className="px-3 py-3" key={h}>
@@ -164,8 +165,13 @@ export default function Products() {
                       ₹{row.latest?.price.toLocaleString("en-IN")}
                     </td>
                     <td className="px-3">{discount}%</td>
-                    <td className="px-3 font-semibold tabular-nums">
-                      #{row.latest?.rank ?? "—"}
+                    <td
+                      className="px-3 font-semibold tabular-nums"
+                      title={row.latest?.rankContext ?? "No verified rank signal"}
+                    >
+                      {row.latest?.rank != null && row.latest?.rankKind
+                        ? `#${row.latest.rank}`
+                        : "—"}
                     </td>
                     <td className="px-3">
                       <Delta value={row.rankChange ?? 0} />
@@ -184,6 +190,14 @@ export default function Products() {
                     </td>
                     <td className="px-3">
                       {row.windowTrend?.confidence ?? "—"}%
+                    </td>
+                    <td className="px-3">
+                      <span className="rounded-full border px-2 py-1 text-[10px] font-semibold capitalize">
+                        {(row.windowTrend?.evidenceLevel ?? "insufficient").replaceAll(
+                          "_",
+                          " ",
+                        )}
+                      </span>
                     </td>
                     <td className="px-3 text-muted-foreground">
                       {row.latest

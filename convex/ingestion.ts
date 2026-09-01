@@ -17,6 +17,15 @@ const row = v.object({
   rating: v.union(v.number(), v.null()),
   review_count: v.union(v.number(), v.null()),
   rank: v.union(v.number(), v.null()),
+  rank_type: v.optional(
+    v.union(
+      v.literal("bestseller"),
+      v.literal("marketplace_popularity"),
+      v.literal("search_position"),
+      v.literal("catalog_position"),
+    ),
+  ),
+  rank_context: v.optional(v.string()),
   category: v.string(),
   availability: v.string(),
   sizes_available: v.array(v.string()),
@@ -90,7 +99,14 @@ export const importRowsInternal = internalMutation({
         const sourceKey = item.source.toLowerCase();
         const publicConfig: Record<
           string,
-          { name: string; method: string; compliance: string; weight: number }
+          {
+            name: string;
+            method: string;
+            compliance: string;
+            weight: number;
+            publicAccess?: boolean;
+            credentials?: string[];
+          }
         > = {
           "campus-ucp": {
             name: "Campus Shoes UCP",
@@ -122,14 +138,38 @@ export const importRowsInternal = internalMutation({
             compliance: "explicit_read_only_ucp",
             weight: 0.75,
           },
+          "amazon-india-anysite": {
+            name: "Amazon India via Anysite",
+            method: "licensed_provider_api",
+            compliance: "provider_contract_required",
+            weight: 0.68,
+            publicAccess: false,
+            credentials: ["ANYSITE_API_TOKEN"],
+          },
+          "flipkart-anysite": {
+            name: "Flipkart via Anysite",
+            method: "licensed_provider_api",
+            compliance: "provider_contract_required",
+            weight: 0.68,
+            publicAccess: false,
+            credentials: ["ANYSITE_API_TOKEN"],
+          },
+          "myntra-anysite": {
+            name: "Myntra via Anysite",
+            method: "licensed_provider_api",
+            compliance: "provider_contract_required",
+            weight: 0.72,
+            publicAccess: false,
+            credentials: ["ANYSITE_API_TOKEN"],
+          },
         };
         const config = publicConfig[sourceKey];
         const sourceId = await ctx.db.insert("sources", {
           key: sourceKey,
           name: config?.name ?? item.source,
           accessMethod: config?.method ?? "csv",
-          credentialsRequired: [],
-          publicAccess: Boolean(config),
+          credentialsRequired: config?.credentials ?? [],
+          publicAccess: config?.publicAccess ?? Boolean(config),
           status: "healthy",
           complianceStatus: config?.compliance ?? "user_provided",
           reliabilityWeight: config?.weight ?? 0.8,
@@ -218,7 +258,9 @@ export const importRowsInternal = internalMutation({
         currency: item.currency,
         rating: item.rating ?? undefined,
         reviewCount: item.review_count ?? undefined,
-        rank: item.rank ?? undefined,
+          rank: item.rank ?? undefined,
+          rankKind: item.rank_type,
+          rankContext: item.rank_context,
         availability: item.availability,
         sizesAvailable: item.sizes_available,
         raw: item,

@@ -90,7 +90,14 @@ export const list = query({
           score,
           windowTrend:
             latest && windowAnchor
-              ? computeWindowTrend(windowAnchor, latest, windowDays)
+              ? computeWindowTrend(
+                  {
+                    ...windowAnchor,
+                    rankKind: windowAnchor.rankKind,
+                  },
+                  { ...latest, rankKind: latest.rankKind },
+                  windowDays,
+                )
               : null,
           rankChange:
             latest?.rank != null && previous?.rank != null
