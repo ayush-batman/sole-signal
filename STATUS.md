@@ -31,6 +31,7 @@ Last updated: 2026-09-01
 - Added the production callback to the GitHub OAuth app and completed the live authorization flow as `ayush-batman`.
 - Browser-verified the production dashboard and product catalog: 621 live snapshots, 472 observed listings, six sources, and working 7-day, 30-day, 90-day, and 180-day views with no console errors.
 - Made the live pipeline formal-first: 75% of each supported UCP request now prioritises formal shoes, the taxonomy distinguishes Oxford, Derby, Monk strap, Moccasin, Loafer, and pump styles, and the dashboard/products screens open focused on formal footwear.
+- Ran the first formal-first production backfill across three live workspaces: 15 source runs succeeded, 910 observations were inserted, 590 same-day duplicates were safely skipped, and no source failed.
 
 ## Blocked on user input
 
@@ -65,6 +66,7 @@ Last updated: 2026-09-01
 - Live browser data: 121 listings, five public store feeds plus one private CSV source, and 120 real product images render in the signed-in workspace.
 - Scheduled production collection: 1,000 observations inserted across two non-demo workspaces from ten successful source-workspace runs; zero failures.
 - Live production browser: all four trend-window controls render the correct selected range and no browser console errors were reported.
+- Formal-first production browser: the Products page opens on `Formal shoes`, renders only the focused rows, and reports no console errors.
 
 ## Commands run
 
