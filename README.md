@@ -13,6 +13,7 @@ The application is MIT-licensed and uses open-source code throughout: Next.js, R
 - Inspectable Trend, Saturation, Opportunity, and Confidence scores
 - Dashboard, trend explorer, products, opportunities, competitors, research, catalog, alerts, sources, settings, and weekly report screens
 - Five permissioned live India catalogs: Campus Shoes, The CAI Store, Neeman's, RedTape, and INC.5
+- Formal-first coverage: 75% of each UCP source request prioritises Oxfords, Derbies, Brogues, Monk straps, Moccasins, Loafers, pumps, and other office footwear
 - Real prices, list prices, images, stock, and sizes synced into the signed-in Convex workspace
 - Daily 06:00 IST collection through a Convex cron, with same-day duplicate protection
 - Honest 7, 30, 90, and 180-day product windows that remain blank until enough real history exists
@@ -74,7 +75,8 @@ workspace. Repeating a source sync on the same UTC day is idempotent: current
 rows are reported as duplicates instead of inflating the observation count.
 
 Production also runs `dailyPipeline:syncDaily` every day at 00:30 UTC (06:00
-IST). A trend window needs at least 70% of its requested calendar history before
+IST). UCP collection requests formal shoes first, then fills the remaining
+coverage with broader footwear for comparison. A trend window needs at least 70% of its requested calendar history before
 it publishes a score. Until then the UI reports the exact observed-day count
 instead of extrapolating or filling gaps with synthetic data.
 

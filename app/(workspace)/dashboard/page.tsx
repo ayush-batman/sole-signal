@@ -32,7 +32,7 @@ export default function Dashboard() {
     api.dashboard.overview,
     loading ? "skip" : { workspaceSlug },
   );
-  const [category, setCategory] = useState("all");
+  const [category, setCategory] = useState("formal");
   const [audience, setAudience] = useState("all");
   const [price, setPrice] = useState("all");
   const [platform, setPlatform] = useState("all");
@@ -67,7 +67,10 @@ export default function Dashboard() {
     (a: any, b: any) => (b.trend?.score ?? 0) - (a.trend?.score ?? 0),
   )[0];
   const leadTrend = lead?.trend;
-  const rankedLiveProducts = [...(productRows ?? [])]
+  const focusedProductRows = (productRows ?? []).filter(
+    (row: any) => category === "all" || row.marketCategory === category,
+  );
+  const rankedLiveProducts = [...focusedProductRows]
     .filter((row: any) => row.windowTrend?.score != null)
     .sort(
       (a: any, b: any) =>
@@ -76,9 +79,7 @@ export default function Dashboard() {
   const leadLiveProduct = rankedLiveProducts[0];
   const observedLiveDays = Math.max(
     0,
-    ...(productRows ?? []).map(
-      (row: any) => row.windowTrend?.evidenceDays ?? 0,
-    ),
+    ...focusedProductRows.map((row: any) => row.windowTrend?.evidenceDays ?? 0),
   );
   const visibleOpportunities = [...filtered]
     .filter((item: any) => (item.opportunity?.score ?? 0) >= 70)
@@ -167,7 +168,7 @@ export default function Dashboard() {
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
               {leadLiveProduct
                 ? leadLiveProduct.windowTrend!.explanation
-                : `${productRows?.length ?? 0} live listings are tracked. ${observedLiveDays} real days are currently available; no trend is claimed before the selected window has enough evidence.`}
+                : `${focusedProductRows.length} ${category === "all" ? "live" : category} listings are tracked. ${observedLiveDays} real days are currently available; no trend is claimed before the selected window has enough evidence.`}
             </p>
             <div className="mt-6 grid grid-cols-3 gap-3">
               <Score

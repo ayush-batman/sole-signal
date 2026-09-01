@@ -180,6 +180,19 @@ describe("ingestion and taxonomy", () => {
     expect(
       inferAttributes("Men's comfort chappal", "comfort").productType,
     ).toBe("slipper"));
+  it.each([
+    ["Black Oxford dress shoes", "oxford"],
+    ["Tan Derby formal shoes", "derby"],
+    ["Leather Monk Strap shoes", "monk_strap"],
+    ["Brown Dress Loafers", "loafer"],
+    ["Black Moccasin formal shoes", "moccasin"],
+    ["Women's pointed pumps", "pump"],
+    ["Men's formal walking shoes", "oxford"],
+  ] as const)("classifies %s as formal %s", (title, productType) => {
+    const attributes = inferAttributes(title);
+    expect(attributes.primaryCategory).toBe("formal");
+    expect(attributes.productType).toBe(productType);
+  });
   it("normalises punctuation and common colour spelling", () =>
     expect(normaliseTitle("Men's NAVY-BLUE Sneaker!!!")).toBe(
       "navy blue sneaker",

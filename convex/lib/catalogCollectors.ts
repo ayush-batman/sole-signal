@@ -1,3 +1,5 @@
+import { inferAttributes } from "../../packages/domain/src";
+
 export type CatalogRow = {
   source: string;
   source_product_id: string;
@@ -94,18 +96,10 @@ function observedDay(): string {
 }
 
 function categoryFor(product: UcpProduct): string {
-  const text = `${product.title ?? ""} ${(product.tags ?? []).join(" ")}`.toLowerCase();
-  for (const value of [
-    "running shoes",
-    "walking shoes",
-    "sneakers",
-    "sandals",
-    "slippers",
-    "clogs",
-  ]) {
-    if (text.includes(value)) return value;
-  }
-  return "footwear";
+  return inferAttributes(
+    product.title ?? "footwear",
+    (product.tags ?? []).join(" "),
+  ).primaryCategory;
 }
 
 function validUcpProduct(product: UcpProduct): boolean {
@@ -118,10 +112,11 @@ function validUcpProduct(product: UcpProduct): boolean {
   );
 }
 
-async function collectUcp(
+async function searchUcp(
   config: (typeof catalogStores)["campus"],
+  query: string,
   limit: number,
-): Promise<CatalogRow[]> {
+): Promise<UcpProduct[]> {
   const siteUrl = process.env.CONVEX_SITE_URL;
   if (!siteUrl) throw new Error("CONVEX_SITE_URL is unavailable.");
   const response = await fetch(config.endpoint, {
@@ -129,14 +124,14 @@ async function collectUcp(
     headers: { "content-type": "application/json", accept: "application/json" },
     body: JSON.stringify({
       jsonrpc: "2.0",
-      id: `solesignal-${config.source}`,
+      id: `solesignal-${config.source}-${query.replaceAll(" ", "-")}`,
       method: "tools/call",
       params: {
         name: "search_catalog",
         arguments: {
           meta: { "ucp-agent": { profile: `${siteUrl}/ucp-agent.json` } },
           catalog: {
-            query: "shoes",
+            query,
             context: {
               address_country: "IN",
               currency: "INR",
@@ -149,19 +144,49 @@ async function collectUcp(
       },
     }),
   });
-  if (!response.ok) throw new Error(`${config.name} returned HTTP ${response.status}.`);
+  if (!response.ok)
+    throw new Error(`${config.name} returned HTTP ${response.status}.`);
   const payload = (await response.json()) as {
-    result?: { isError?: boolean; structuredContent?: { products?: UcpProduct[] } };
+    result?: {
+      isError?: boolean;
+      structuredContent?: { products?: UcpProduct[] };
+    };
     error?: { message?: string };
   };
   if (payload.error || payload.result?.isError) {
-    throw new Error(payload.error?.message ?? `${config.name} reported an error.`);
+    throw new Error(
+      payload.error?.message ?? `${config.name} reported an error.`,
+    );
   }
-  const products = (payload.result?.structuredContent?.products ?? []).filter(validUcpProduct);
-  if (!products.length) throw new Error(`${config.name} returned no valid products.`);
-  return products.slice(0, limit).map((product) => {
+  return (payload.result?.structuredContent?.products ?? []).filter(
+    validUcpProduct,
+  );
+}
+
+async function collectUcp(
+  config: (typeof catalogStores)["campus"],
+  limit: number,
+): Promise<CatalogRow[]> {
+  const formalLimit = Math.max(1, Math.ceil(limit * 0.75));
+  const [formalProducts, broadProducts] = await Promise.all([
+    searchUcp(config, "formal shoes", formalLimit),
+    searchUcp(config, "shoes", limit),
+  ]);
+  const products = [
+    ...new Map(
+      [...formalProducts, ...broadProducts].map((product) => [
+        product.id!,
+        product,
+      ]),
+    ).values(),
+  ].slice(0, limit);
+  if (!products.length)
+    throw new Error(`${config.name} returned no valid products.`);
+  return products.map((product) => {
     const variants = product.variants ?? [];
-    const available = variants.filter((variant) => variant.availability?.available === true);
+    const available = variants.filter(
+      (variant) => variant.availability?.available === true,
+    );
     const sizes = [
       ...new Set(
         available.flatMap((variant) =>
@@ -173,7 +198,9 @@ async function collectUcp(
     ];
     const image =
       product.media?.find((item) => item.type === "image")?.url ??
-      available.flatMap((variant) => variant.media ?? []).find((item) => item.type === "image")?.url ??
+      available
+        .flatMap((variant) => variant.media ?? [])
+        .find((item) => item.type === "image")?.url ??
       null;
     return {
       source: config.source,
@@ -205,7 +232,8 @@ async function collectShopify(
   const response = await fetch(`${config.endpoint}?limit=${limit}`, {
     headers: { accept: "application/json" },
   });
-  if (!response.ok) throw new Error(`${config.name} returned HTTP ${response.status}.`);
+  if (!response.ok)
+    throw new Error(`${config.name} returned HTTP ${response.status}.`);
   const payload = (await response.json()) as { products?: ShopifyProduct[] };
   const rows = (payload.products ?? [])
     .filter(
@@ -227,23 +255,34 @@ async function collectShopify(
         title: product.title!,
         brand: product.vendor || config.brand,
         price: Number(primary?.price ?? 0),
-        original_price: primary?.compare_at_price ? Number(primary.compare_at_price) : null,
+        original_price: primary?.compare_at_price
+          ? Number(primary.compare_at_price)
+          : null,
         currency: "INR",
         rating: null,
         review_count: null,
         rank: null,
-        category: product.product_type || "footwear",
+        category: inferAttributes(
+          product.title!,
+          product.product_type || "footwear",
+        ).primaryCategory,
         availability: available.length ? "in_stock" : "out_of_stock",
-        sizes_available: available.flatMap((variant) => (variant.title ? [variant.title] : [])),
+        sizes_available: available.flatMap((variant) =>
+          variant.title ? [variant.title] : [],
+        ),
         image_url: product.images?.[0]?.src ?? null,
         observed_at: observedDay(),
       } satisfies CatalogRow;
     });
-  if (!rows.length) throw new Error(`${config.name} returned no valid products.`);
+  if (!rows.length)
+    throw new Error(`${config.name} returned no valid products.`);
   return rows;
 }
 
-export async function collectCatalog(store: CatalogStoreKey, requestedLimit = 100) {
+export async function collectCatalog(
+  store: CatalogStoreKey,
+  requestedLimit = 100,
+) {
   const limit = Math.max(1, Math.min(Math.floor(requestedLimit), 100));
   const config = catalogStores[store];
   return config.kind === "ucp"

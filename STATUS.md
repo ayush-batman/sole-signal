@@ -30,6 +30,7 @@ Last updated: 2026-09-01
 - Published the public GitHub repository and production Vercel/Convex deployments.
 - Added the production callback to the GitHub OAuth app and completed the live authorization flow as `ayush-batman`.
 - Browser-verified the production dashboard and product catalog: 621 live snapshots, 472 observed listings, six sources, and working 7-day, 30-day, 90-day, and 180-day views with no console errors.
+- Made the live pipeline formal-first: 75% of each supported UCP request now prioritises formal shoes, the taxonomy distinguishes Oxford, Derby, Monk strap, Moccasin, Loafer, and pump styles, and the dashboard/products screens open focused on formal footwear.
 
 ## Blocked on user input
 
@@ -51,7 +52,7 @@ Last updated: 2026-09-01
 
 - TypeScript: root and collector type checks pass.
 - Lint: no errors or warnings.
-- Unit/integration: 21 tests cover scoring scenarios, four-window history gates, low-inventory and discount false positives, taxonomy, normalization, matching, CSV, live-source fixtures, ingestion idempotency, and cross-workspace rejection.
+- Unit/integration: 28 tests cover scoring scenarios, four-window history gates, low-inventory and discount false positives, formal-shoe taxonomy, normalization, matching, CSV, live-source fixtures, ingestion idempotency, and cross-workspace rejection.
 - Browser: 7 Playwright checks pass across desktop and phone; one desktop-only duplicate of the phone navigation test is intentionally skipped.
 - Real authentication: GitHub authorization returns to `http://localhost:3000`, the session survives a production rebuild/restart, and authenticated UI shows `Sign out`.
 - Production authentication: GitHub authorization returns to `https://sole-signal-nu.vercel.app/dashboard`; the private dashboard and catalog load for `ayush-batman`.

@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { workspaceBySlug } from "./lib/access";
-import { computeWindowTrend } from "../packages/domain/src";
+import { computeWindowTrend, inferAttributes } from "../packages/domain/src";
 
 const windowDaysValidator = v.union(
   v.literal(7),
@@ -38,11 +38,9 @@ export const list = query({
           .order("desc")
           .take(2);
         const latest = snapshots[0] ?? null;
-        const cutoff = latest
-          ? latest.observedAt - windowDays * 86_400_000
-          : 0;
+        const cutoff = latest ? latest.observedAt - windowDays * 86_400_000 : 0;
         const windowAnchor = latest
-          ? (
+          ? ((
               await ctx.db
                 .query("listingSnapshots")
                 .withIndex("by_listing_and_observed_at", (q) =>
@@ -59,7 +57,7 @@ export const list = query({
                 )
                 .order("asc")
                 .take(1)
-            )[0]
+            )[0])
           : null;
         const previous = windowAnchor ?? snapshots[1] ?? null;
         const membership = (
@@ -83,6 +81,8 @@ export const list = query({
           : null;
         return {
           listing,
+          marketCategory: inferAttributes(listing.title, listing.category)
+            .primaryCategory,
           product,
           source,
           latest,

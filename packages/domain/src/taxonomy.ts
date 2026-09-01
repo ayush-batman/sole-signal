@@ -164,7 +164,47 @@ const rules: Array<{ pattern: RegExp; value: Partial<FootwearAttributes> }> = [
     },
   },
   {
-    pattern: /formal|oxford/i,
+    pattern: /\bmonk(?:\s*strap)?\b/i,
+    value: {
+      productType: "monk_strap",
+      primaryCategory: "formal",
+      aestheticTags: ["minimalist"],
+    },
+  },
+  {
+    pattern: /\bderb(?:y|ies)\b/i,
+    value: {
+      productType: "derby",
+      primaryCategory: "formal",
+      aestheticTags: ["minimalist"],
+    },
+  },
+  {
+    pattern: /\bmoccasin(?:s)?\b/i,
+    value: {
+      productType: "moccasin",
+      primaryCategory: "formal",
+      aestheticTags: ["quiet_luxury"],
+    },
+  },
+  {
+    pattern: /\bloafer(?:s)?\b/i,
+    value: {
+      productType: "loafer",
+      primaryCategory: "formal",
+      aestheticTags: ["quiet_luxury"],
+    },
+  },
+  {
+    pattern: /\bpump(?:s)?\b|court shoe/i,
+    value: {
+      productType: "pump",
+      primaryCategory: "formal",
+      aestheticTags: ["minimalist"],
+    },
+  },
+  {
+    pattern: /formal|oxford|brogue|dress shoe|office shoe/i,
     value: {
       productType: "oxford",
       primaryCategory: "formal",
@@ -194,7 +234,13 @@ export function inferAttributes(
   category = "",
 ): FootwearAttributes {
   const text = `${title} ${category}`;
-  const matched = rules.find((rule) => rule.pattern.test(text))?.value ?? {};
+  const matched =
+    rules.find(
+      (rule) =>
+        rule.value.primaryCategory === "formal" && rule.pattern.test(text),
+    )?.value ??
+    rules.find((rule) => rule.pattern.test(text))?.value ??
+    {};
   const audience = /women|ladies|female/i.test(text)
     ? "women"
     : /kids|boys|girls/i.test(text)

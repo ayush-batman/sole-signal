@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useWorkspace } from "@/lib/useWorkspace";
 import {
@@ -25,14 +25,17 @@ export default function Products() {
     loading ? "skip" : { workspaceSlug, windowDays },
   );
   const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("formal");
   const filtered = useMemo(
     () =>
-      rows?.filter((r: any) =>
-        `${r.listing.title} ${r.listing.brand} ${r.listing.category}`
-          .toLowerCase()
-          .includes(search.toLowerCase()),
+      rows?.filter(
+        (r: any) =>
+          (category === "all" || r.marketCategory === category) &&
+          `${r.listing.title} ${r.listing.brand} ${r.marketCategory}`
+            .toLowerCase()
+            .includes(search.toLowerCase()),
       ) ?? [],
-    [rows, search],
+    [rows, search, category],
   );
   if (loading || !rows) return <LoadingPage />;
   return (
@@ -40,7 +43,7 @@ export default function Products() {
       <PageHeader
         eyebrow="Observation catalog"
         title="Products"
-        description="A dense, source-aware view of every current listing and its latest historical change."
+        description="Formal shoes are prioritised by default, with every source observation and historical change still available."
       >
         <DemoBadge />
       </PageHeader>
@@ -54,10 +57,20 @@ export default function Products() {
             className="pl-9"
           />
         </div>
-        <button className="flex h-10 items-center gap-2 rounded-lg border px-3 text-xs font-semibold">
-          <SlidersHorizontal className="h-4 w-4" />
-          Filters
-        </button>
+        <label className="flex h-10 items-center gap-2 rounded-lg border px-3 text-xs font-semibold">
+          Focus
+          <select
+            value={category}
+            onChange={(event) => setCategory(event.target.value)}
+            className="bg-transparent text-foreground outline-none"
+          >
+            <option value="formal">Formal shoes</option>
+            <option value="all">All footwear</option>
+            <option value="casual">Casual</option>
+            <option value="comfort">Comfort</option>
+            <option value="performance">Performance</option>
+          </select>
+        </label>
         <label className="flex h-10 items-center gap-2 rounded-lg border px-3 text-xs font-semibold">
           Trend window
           <select
@@ -146,7 +159,7 @@ export default function Products() {
                       </Link>
                     </td>
                     <td className="px-3">{row.source?.name}</td>
-                    <td className="px-3 capitalize">{row.listing.category}</td>
+                    <td className="px-3 capitalize">{row.marketCategory}</td>
                     <td className="px-3 font-semibold tabular-nums">
                       ₹{row.latest?.price.toLocaleString("en-IN")}
                     </td>
